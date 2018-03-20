@@ -1,3 +1,4 @@
 data/
 src/backup/
 src/config.py
+src/__*
