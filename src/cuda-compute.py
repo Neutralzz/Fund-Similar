@@ -133,12 +133,14 @@ def solve(cur_date):
         
         time_start = time.time()
         
-        target = list(mongo_cli['fund-data'][code].find( { 'date' : {'$lte' : cur_date} } , {'date':1,'value':1}))
+        target = list(mongo_cli['fund-data'][code].find( { 'date' : {'$lte' : cur_date} } , {'date':1,'value':1}).\
+                    sort('date',pymongo.ASCENDING))
         
         # not enough long
         if len(target) < width + width/2 + 1:
             continue
-
+        #print(target[0])
+        #print(target[1])
         l_id = int(code) + 1e6
         L1,L2 = [l_id],[l_id]
 
@@ -173,6 +175,7 @@ def solve(cur_date):
                 })
         print(dic)
     """
+    simi_res = []
     for i in range(len(sMat_info)):
         code = sMat_info[i]['code']
         dic = {}
@@ -186,8 +189,22 @@ def solve(cur_date):
                 'rdate': time.strftime('%Y-%m-%d', time.localtime(result[i][j][2])),
                 'similarity' : float(result[i][j][0])
                 })
+        simi_res.append({
+            'code_a' : code,
+            'rdate_a' : dic['rdate'],
+            'code_b' : dic['similar'][0]['code'],
+            'rdate_b' : dic['similar'][0]['rdate'],
+            'similarity' : dic['similar'][0]['similarity']
+        })
         mongo_cli['fund-similar'][code].update({'_id':dic['_id']},{'$set':dic},upsert=True)
-
+    simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
+    simi_res = simi_res[0:200]
+    simi_top = {
+        '_id' : cur_date,
+        'date' : cur_date,
+        'top' : simi_res
+    }
+    mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
     print("total compute time %.4f , total used time %.4f."%(time_prog_compute,float(time.time()-time_prog_start)))
 
 def main():
