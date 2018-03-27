@@ -2,3 +2,4 @@ data/
 log/
 src/backup/
 src/config.py
+src/__*

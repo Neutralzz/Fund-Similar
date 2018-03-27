@@ -53,14 +53,6 @@ def main():
         mongo_cli['fund-data'][item[0]].update({'_id':dic['_id']},{'$set':dic},upsert=True)
 
 
-
-
-
-
-
-
-
-
 if __name__ == '__main__':
     main()
 
