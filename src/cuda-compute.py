@@ -200,7 +200,7 @@ def solve(cur_date):
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
     simi_res = simi_res[0:200]
     simi_top = {
-        '_id' : cur_date,
+        '_id' : cur_date+','+str(width),
         'date' : cur_date,
         'top' : simi_res
     }

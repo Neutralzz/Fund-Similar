@@ -40,12 +40,24 @@ class ResultHandler(tornado.web.RequestHandler):
         self.write(json.dumps(result))
         self.finish()
 
+class InfoHandler(tornado.web.RequestHandler):
+    def get(self,input):
+        global mongo_cli
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
+        date = self.get_argument('date',time.strftime("%Y-%m-%d", time.localtime(time.time()-86400)))
+        width = self.get_argument('len',20)
+        if input == 'top':
+            result = list(mongo_cli['fund-info']['similar-top'].find({'_id':date+','+str(width)}))
+            self.write(json.dumps(result))
+        self.finish()
+
 def main():
     tornado.options.parse_command_line()
     app = tornado.web.Application(
         handlers=[
             (r"/jjjz/", DataHandler),
-            (r"/xsjg/",ResultHandler)
+            (r"/xsjg/",ResultHandler),
+            (r"/info/(\w+)",InfoHandler)
         ]
     )
     http_server = tornado.httpserver.HTTPServer(app)
