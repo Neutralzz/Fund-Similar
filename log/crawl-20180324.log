@@ -1,0 +1,27 @@
+2018-03-23 2018-03-22
+Traceback (most recent call last):
+  File "crawl.py", line 42, in <module>
+    get_latest_data()
+  File "crawl.py", line 35, in get_latest_data
+    mongo_cli['fund-data'][item[0]].update({'_id':dic['_id']},{'$set':dic},upsert=True)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/collection.py", line 2974, in update
+    write_concern, collation=collation)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/collection.py", line 836, in _update_retryable
+    _update, session)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/mongo_client.py", line 1101, in _retryable_write
+    with self._tmp_session(session) as s:
+  File "/usr/lib/python3.5/contextlib.py", line 59, in __enter__
+    return next(self.gen)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/mongo_client.py", line 1407, in _tmp_session
+    s = self._ensure_session(session)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/mongo_client.py", line 1394, in _ensure_session
+    return self.start_session(causal_consistency=False)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/mongo_client.py", line 1372, in start_session
+    server_session = self._get_server_session()
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/mongo_client.py", line 1380, in _get_server_session
+    return self._topology.get_server_session()
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/topology.py", line 427, in get_server_session
+    None)
+  File "/usr/local/lib/python3.5/dist-packages/pymongo/topology.py", line 199, in _select_servers_loop
+    self._error_message(selector))
+pymongo.errors.ServerSelectionTimeoutError: 127.0.0.1:27613: [Errno 111] Connection refused
