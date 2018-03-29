@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+
+{% block title %}相似排名 - 基金相似在线查询{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <h3><span id="date"></span>&nbsp;基金相似排名</h3>
+</div>
+<div class="row">
+    <table class="table">
+        <thead>
+                <tr>
+                    <th>基金名称代码</th>
+                    <th>相似基金</th>
+                    <th>起止日期</th>
+                    <th>相似度</th>
+                    <th></th>
+                </tr>
+        </thead>
+        <tbody id="simitop">
+            
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    var code2name = null
+    var querydate = null
+    $(document).ready(function(){
+        $.ajax({
+            url: "http://47.94.128.239:8088/info/codename",
+            type: "GET",
+            dataType: "jsonp",  //指定服务器返回的数据类型
+            success: function (data) {
+                //console.info("调用success");
+                code2name = data
+                get_data()
+            }
+        });
+    })
+
+    function get_data(){
+        $.ajax({
+            url: "http://47.94.128.239:8088/info/top",
+            type: "GET",
+            dataType: "jsonp",  //指定服务器返回的数据类型
+            jsonpCallback: "data_init",  //指定回调函数名称
+            success: function (data) {
+                //console.info("调用success");
+            }
+        });       
+    }
+
+    function data_init(data){
+        data = data[0]
+        querydate = data["date"]
+        $("#date").html(querydate)
+        rows = data["top"]
+        html = ""
+        for(var i = 0;i < rows.length;i++){
+            single = "<tr>"
+            single += "<td>"+code2name[rows[i]["code_a"]]+"("+rows[i]["code_a"]+")</td>"
+            single += "<td>"+code2name[rows[i]["code_b"]]+"("+rows[i]["code_b"]+")</td>"
+            single += "<td>"+rows[i]["rdate_b"]+"</td>"
+            single += "<td>"+(100*rows[i]["similarity"]).toFixed(3)+"%</td>"
+            single += "<td id=\""+rows[i]["code_a"]+"\" onclick=\"query(this)\"><button class=\"btn btn-success btn-xs btn-block\">查看</button></td>"
+            single += "</tr>"
+            html += single
+        }
+        $("#simitop").html(html)
+    }
+    function query(tdObj){
+        var id = $(tdObj).attr("id")
+        console.log(id)
+        window.open("/search/?fundcode="+id+"&date="+querydate)
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <meta http-equiv="X-UA-Compatible" content="IE=EmulateIE10" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="utf-8" />
+        <script src="http://cdn.bootcss.com/jquery/1.11.2/jquery.min.js"></script>
+        <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css">
+        <script src="http://cdn.bootcss.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+        <script src="https://cdn.bootcss.com/echarts/4.0.4/echarts.js"></script>
+        <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">基金相似在线查询</a>
+        </div>
+        <div>
+            <ul class="nav navbar-nav">
+                <li ><a href="/">主页</a></li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li ><a href="/top/">相似排名</a></li>
+            </ul>
+            <!-- <ul class="nav navbar-nav">
+                <li ><a href="/top/">相似查询</a></li>
+            </ul> -->
+        </div>
+        <form class="navbar-form navbar-right" role="search" action="/search/" method="get">
+            <div class="form-group">
+                <input type="text" class="form-control" name="fundcode" placeholder="基金代码">
+            </div>
+            <button type="submit" class="btn btn-default" onclick="search()">相似查询</button>
+        </form>
+        </div>
+    </nav>
+    <div class="container" style="width: 90%">
+        <header>
+            <p class=text-center>
+            <iframe src="http://www.kjj.com/zhishu-4-bbs.html" allowtransparency="true" width="950" height="24" scrolling="no" frameborder="0"></iframe></p>
+        </header>
+        {% block content %}{% endblock %}
+    </div>
+    <!--<footer>
+        <center>Neutralzz</center>
+        <center>{% block footer %}SDU{% endblock %}</center> 
+    </footer> -->
+    {% block script %}{% endblock %}
+</body>
+</html>
