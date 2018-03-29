@@ -42,9 +42,13 @@ class ResultHandler(tornado.web.RequestHandler):
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
         callback = self.get_argument('callback','')
         code = self.get_argument('code')
-        date = self.get_argument('date',time.strftime("%Y-%m-%d", time.localtime(time.time()-86400)))
+        date = self.get_argument('date',None)
         width = int(self.get_argument('len','20'))
-        result = list(mongo_cli['fund-similar'][code].find({'_id':date+','+str(width)}))
+        result = []
+        if date:
+            result = list(mongo_cli['fund-similar'][code].find({'_id':date+','+str(width)}))
+        else:
+            result = list(mongo_cli['fund-similar'][code].find().sort('rdate',pymongo.DESCENDING).limit(1))
         self.write(callback+'('+json.dumps(result)+')')
         self.finish()
 
