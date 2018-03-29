@@ -189,19 +189,20 @@ def solve(cur_date):
                 'rdate': time.strftime('%Y-%m-%d', time.localtime(result[i][j][2])),
                 'similarity' : float(result[i][j][0])
                 })
-        simi_res.append({
-            'code_a' : code,
-            'rdate_a' : dic['rdate'],
-            'code_b' : dic['similar'][0]['code'],
-            'rdate_b' : dic['similar'][0]['rdate'],
-            'similarity' : dic['similar'][0]['similarity']
-        })
+        if dic['rdate'] == time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400)):
+            simi_res.append({
+                'code_a' : code,
+                'rdate_a' : dic['rdate'],
+                'code_b' : dic['similar'][0]['code'],
+                'rdate_b' : dic['similar'][0]['rdate'],
+                'similarity' : dic['similar'][0]['similarity']
+            })
         mongo_cli['fund-similar'][code].update({'_id':dic['_id']},{'$set':dic},upsert=True)
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
     simi_res = simi_res[0:200]
     simi_top = {
-        '_id' : cur_date+','+str(width),
-        'date' : cur_date,
+        '_id' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400))+','+str(width),
+        'date' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400)),
         'top' : simi_res
     }
     mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
