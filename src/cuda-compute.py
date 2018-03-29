@@ -201,8 +201,8 @@ def solve(cur_date):
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
     simi_res = simi_res[0:200]
     simi_top = {
-        '_id' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400))+','+str(width),
-        'date' : time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400)),
+        '_id' : time.strftime("%Y-%m-%d", time.localtime(time.time()-86400))+','+str(width),
+        'date' : time.strftime("%Y-%m-%d", time.localtime(time.time()-86400)),
         'top' : simi_res
     }
     mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
