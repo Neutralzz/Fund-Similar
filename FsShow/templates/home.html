@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+
+{% block title %}基金相似在线查询{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h4><font id="col-sh000001">上证指数&nbsp;<span id="val-sh000001"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsh000001.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+    <div class="col-md-4">
+        <h4><font id="col-sz399001">深证指数&nbsp;<span id="val-sz399001"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsz399001.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+    <div class="col-md-4">
+        <h4><font id="col-sh000300">沪深300&nbsp;<span id="val-sh000300"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsh000300.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+    <div class="col-xs-4">
+        <h4><font id="col-sz399006">创业板指&nbsp;<span id="val-sz399006"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsz399006.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+    <div class="col-xs-4">
+        <h4><font id="col-sz399005">中小板指&nbsp;<span id="val-sz399005"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsz399005.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+    <div class="col-xs-4">
+        <h4><font id="col-sh000016">上证50&nbsp;<span id="val-sh000016"></span></font></h4>
+        <p class="text-left"><img src="http://image.sinajs.cn/newchart/small/nsh000016.gif" id="gs_chart" class="img-responsive img-thumbnail"></p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="http://hq.sinajs.cn/list=sh000001,sz399001,sh000300,sz399006,sz399005,sh000016"></script>
+<script type="text/javascript">
+    var data = null
+    var value = null
+    var lvalue = null
+    var rate = null
+    {% for code in zscode %}
+        data = hq_str_{{ code }}.split(",")
+        value = parseFloat(data[3])
+        lvalue = parseFloat(data[2])
+        rate = (100*(value-lvalue)/lvalue).toFixed(2)+"%"
+        if(value-lvalue > 0)
+            rate = "+"+rate
+        $("#val-{{ code }}").html(value.toFixed(2)+"&nbsp;&nbsp;"+rate)
+        if(lvalue < value)
+            $("#col-{{ code }}").attr("color","red")
+        else
+            $("#col-{{ code }}").attr("color","green")
+    {% endfor %}
+</script>
+{% endblock %}

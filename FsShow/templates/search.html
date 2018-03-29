@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+
+{% block title %}{{ code }}{% endblock %}
+
+{% block content %}
+<div id="main" class="row">
+    <h3 class="text-center"><font color="#d14a61"><span id="mname">Fund Similar</span></font><small>&nbsp;VS&nbsp;</small><font color="#5793f3"><span id="cname">Fund Similar</span></font>&nbsp;&nbsp;<small>相似度:&nbsp;<font color="red"><span id="similarity"></span></font></small></h3>
+    <div id = "info" class="col-xs-5" >
+        <div class="row"><div class="col-xs-1"></div><div class="col-xs-10"><h3><font color="#d14a61">实时估值</font></h3>
+        </div></div>
+        <div class="row">
+        <div class="col-xs-1"></div>
+        <div class="col-xs-5">
+            <h4>净值估算&nbsp;&nbsp;<small><span id="gstime">09:52:00</span></small></h4>
+            <h2><font class="gscolor" color="red"><span id="gsz"></span></font>&nbsp;&nbsp;<small><font class="gscolor"><span id="gsrate"></span></font></small><h2>
+        </div>
+        <div id="gsjz" class="col-xs-6">
+            <h4>单位净值&nbsp;&nbsp;<small><span id="jztime">(2018-03-28)</span></small></h4>
+            <h2><font class="jzcolor" color="red"><span id="dwjz"></span></font>&nbsp;&nbsp;<small><font class="jzcolor"><span id="jzrate"></span></font></small><h2>
+        </div>
+        
+        </div>
+        <div class="row">
+            <div class="col-xs-1"></div>
+            <div class="col-xs-10">
+                <p class="text-left"><span id="gsname"></span>净值估算图</p>
+                <p class="text-left"><img src="http://www.kjj.com/fundlive-vpic.php?code={{ code }}&r=.{{ timetick }}" id="gs_chart" class="img-responsive img-thumbnail"></p>
+            </div>
+        </div>
+    </div>
+    <div id = "chart" class="col-xs-7" ></div>
+</div>
+<div class="row">
+    <p class="text-center">
+        <button id="prev" class="btn btn-primary" disabled="disabled">上一个</button>
+        <button id="next" class="btn btn-primary">下一个</button>
+    </p>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript" src="http://hq.sinajs.cn/&list=fu_{{ code }},f_{{ code }}">
+</script>
+<script type="text/javascript">
+    var colors = ['#d14a61','#5793f3',  '#675bba']
+    var code= "{{ code }}"
+    var date = null
+    var len = null
+    var simi_res = null
+    
+    var cid = 0
+    var mdata = null
+    var cdata = null
+    var mChart = echarts.init(document.getElementById('chart'))
+
+    set_fund_info()
+
+    set_charts_size()
+    
+    echartsInit(mChart)
+
+    $(document).ready(function(){
+        var query = "http://47.94.128.239:8088/xsjg/?code="+code
+        {% if date %}
+            query += "&date={{ date }}"
+        {% endif %}
+        {% if len %}
+            query += "&len={{ len }}"
+        {% else %}
+            len = 20
+        {% endif %}
+        
+        console.info(query)
+        $.ajax({
+            url: query,
+            type: "GET",
+            dataType: "jsonp",  //指定服务器返回的数据类型
+            jsonpCallback: "data_init",  //指定回调函数名称
+            success: function (data) {
+                //console.info("调用success");
+            }
+        });
+
+        $(window).resize(function() {
+            //重置容器高宽
+            set_charts_size()
+        });
+    })
+    
+    $("#prev").click(function(){
+        cid--
+        load_cdata()
+        set_button_status()
+        //set_info()
+    })
+    $("#next").click(function(){
+        cid++
+        load_cdata()
+        set_button_status()
+        //set_info()
+    })
+
+
+    function set_fund_info(){
+        var jz =  hq_str_f_{{ code }}.split(",")
+        var gs =  hq_str_fu_{{ code }}.split(",")
+        console.info(gs)
+        $("#gsname").html(gs[0])
+        $("#gstime").html(gs[1])
+        $("#gsz").html(gs[2])
+        $("#jztime").html(jz[4])
+        $("#dwjz").html(jz[1])
+
+        var jzrate = (parseFloat(jz[1])-parseFloat(jz[3]))*100/parseFloat(jz[3])
+        var gsrate = (parseFloat(gs[2])-parseFloat(jz[1]))*100/parseFloat(jz[1])
+        $("#jzrate").html(jzrate.toFixed(3)+"%")
+        $("#gsrate").html(gsrate.toFixed(3)+"%")
+        if(jzrate < 0)
+            $(".jzcolor").attr("color","green")
+        else
+            $(".jzcolor").attr("color","red")
+        if(gsrate < 0)
+            $(".gscolor").attr("color","green")
+        else
+            $(".gscolor").attr("color","red")        
+    }
+
+    function set_button_status(){
+        if(cid == 0)
+            $("#prev").attr("disabled",true)
+        else
+            $("#prev").attr("disabled",false)
+        if(cid+1 == simi_res.length)
+            $("#next").attr("disabled",true)
+        else
+            $("#next").attr("disabled",false)
+    }
+
+    function set_info(){
+        mname = mdata[0]['name']
+        cname = cdata[0]['name']
+        console.info(cname)
+        $('#mname').html(mname)
+        $('#cname').html(cname)
+        value = parseInt(10000*simi_res[cid]['similarity'])/100.0
+        $('#similarity').html(value.toString()+'%')
+    }
+
+    function set_charts_size(){
+        var width = $("#main").width();
+        var height = width*3/8;
+        if(height < 450)
+            height = 450;
+        
+        $("#chart").css("height", height);
+        mChart.resize();
+    }
+
+
+    function data_init(data){   
+        simi_res = data[0]["similar"]
+
+        date = data[0]["rdate"]
+        $.ajax({
+            url : "http://47.94.128.239:8088/jjjz/?code="+code+"&date="+date+"&len="+len+"&after="+(len/2),
+            type : "GET",
+            dataType: "jsonp",  //指定服务器返回的数据类型
+            success: function (data) {
+                mdata = data
+                console.info(data)
+                load_cdata()
+            }
+        })
+        set_button_status()
+    }
+
+
+    function load_cdata(){
+        $.ajax({
+            url : "http://47.94.128.239:8088/jjjz/?code="+simi_res[cid]["code"]+"&date="+simi_res[cid]["rdate"]+"&len="+len+"&after="+(len/2),
+            type : "GET",
+            dataType: "jsonp",  //指定服务器返回的数据类型
+            success: function (data2) {
+                cdata = data2
+                set_chart_data(mChart)
+                set_info()
+            }
+        })
+    }
+
+    function set_chart_data(chart){
+        mcode = code
+        ccode = simi_res[cid]["code"]
+
+        mdata0 = []
+        mdata1 = []
+        cdata0 = []
+        cdata1 = []
+
+        for(var i = 0;i < len+len/2;i++){
+            mdata0.push(mdata[i]['date'])
+            cdata0.push(cdata[i]['date'])
+            mdata1.push(mdata[i]['value'])
+            cdata1.push(cdata[i]['value'])
+        }
+        console.info(mcode)
+        console.info(ccode)
+        chart.setOption(option = {
+            legend: {
+                data:[mcode,ccode]
+            },
+            xAxis: [
+                {
+                    data: mdata0
+                },
+                {
+                    data: cdata0
+                }
+            ],
+            series: [
+                {
+                    name: mcode,
+                    type:'line',
+                    smooth: true,
+                    data: mdata1,
+                    markLine:{
+                        symbolSize: 0,
+                        label:{
+                            show : false,
+                            position: 'start',
+                        },
+                        lineStyle:{
+                            normal:{
+                                type:'dashed',
+                                color:colors[0],
+                                opacity: 0.5
+                            }
+                        },
+                        data:[
+                            {
+                                type:'min',
+                                xAxis:mdata0[len-1],
+                            },
+                            {
+                                type:'max',
+                                xAxis:mdata0[len-1],
+                            }
+                        ]
+                    }
+                },
+                {
+                    name: ccode,
+                    type:'line',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    smooth: true,
+                    data: cdata1
+                }
+            ]
+        })
+    }
+
+
+    function echartsInit(chart){
+        chart.setOption(option = {
+            color: colors,
+            tooltip: {
+                trigger: 'none',
+                axisPointer: {
+                    type: 'cross'
+                }
+            },
+            legend: {
+                data:['A', 'B']
+            },
+            grid: {
+                top: 70,
+                bottom: 50
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    axisTick: {
+                        alignWithLabel: true
+                    },
+                    axisLine: {
+                        onZero: false,
+                        lineStyle: {
+                            color: colors[0]
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function (params) {
+                                return '单位净值  ' + params.value
+                                    + (params.seriesData.length ? '：' + params.seriesData[0].data : '');
+                            }
+                        }
+                    },
+                    data: []
+                },
+                {
+                    type: 'category',
+                    axisTick: {
+                        alignWithLabel: true
+                    },
+                    axisLine: {
+                        onZero: false,
+                        lineStyle: {
+                            color: colors[1]
+                        }
+                    },
+                    axisPointer: {
+                        label: {
+                            formatter: function (params) {
+                                return '单位净值  ' + params.value
+                                    + (params.seriesData.length ? '：' + params.seriesData[0].data : '');
+                            }
+                        }
+                    },
+                    data: []
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    scale : true
+                },
+                {
+                    type: 'value',
+                    scale : true
+                }
+            ],
+            series: [
+                {
+                    name:'A',
+                    type:'line',
+                    smooth: true,
+                    data: []
+                },
+                {
+                    name:'B',
+                    type:'line',
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    smooth: true,
+                    data: []
+                }
+            ]
+        })
+    }
+
+</script>
+{% endblock %}
+
+
+
