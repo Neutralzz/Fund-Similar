@@ -62,9 +62,17 @@ class InfoHandler(tornado.web.RequestHandler):
         if input == 'top':
             result = list(mongo_cli['fund-info']['similar-top'].find({'_id':date+','+str(width)}))
             self.write(callback+'('+json.dumps(result)+')')
+        if input == 'codename':
+            result = {}
+            codes = mongo_cli['fund-data'].collection_names(include_system_collections=False)
+            for code in codes:
+                name = list(mongo_cli['fund-data'][code].find().limit(1))[0]['name']
+                result[code] = name
+            self.write(callback+'('+json.dumps(result)+')')            
         self.finish()
 
 def main():
+
     tornado.options.parse_command_line()
     app = tornado.web.Application(
         handlers=[
