@@ -77,11 +77,11 @@ def compute(lMat,sMat,result):
 
 
 def load_data(cur_date):
-    global sMat, sMat_info, mongo_cli, width
+    global sMat, sMat_info, mongo_cli, width, last_date
     codes = mongo_cli['fund-data'].collection_names(include_system_collections=False)
     sMat = []
     sMat_info = []
-
+    last_date = '0000-00-00'
     #count = 0
     for code in codes:
         target = list(mongo_cli['fund-data'][code].find( { 'date' : {'$lte' : cur_date} } , {'date':1,'value':1}).\
@@ -91,7 +91,8 @@ def load_data(cur_date):
             continue
 
         print('load short seqence : %s'%code)
-
+        if target[-1]['date'] > last_date:
+            last_date = target[-1]['date']
         sMat_info.append({
                 'date' : target[-1]['date'],
                 'code' : code
@@ -109,15 +110,14 @@ def load_data(cur_date):
     sMat = np.array(sMat,np.float32)
 
 def solve(cur_date):
-    global mongo_cli, sMat, sMat_info, width, RESNUM
+    global mongo_cli, sMat, sMat_info, width, RESNUM, last_date
 
     time_prog_start = time.time()
     time_prog_compute = 0
 
     # load short seqences
     load_data(cur_date)
-    print('load short seqences finish.')
-
+    print('load short seqences finish.',last_date)
     #time.sleep(10)
 
     threadsperblock = 64
@@ -127,7 +127,6 @@ def solve(cur_date):
     codes = mongo_cli['fund-data'].collection_names(include_system_collections=False)
     
     result = np.zeros((sMat.shape[0], RESNUM, 3), dtype=np.float32)
-    #maxvalue = np.zeros((sMat.shape[0]),dtype=np.float32)
 
     for code in codes:
         
@@ -136,11 +135,8 @@ def solve(cur_date):
         target = list(mongo_cli['fund-data'][code].find( { 'date' : {'$lte' : cur_date} } , {'date':1,'value':1}).\
                     sort('date',pymongo.ASCENDING))
         
-        # not enough long
         if len(target) < width + width/2 + 1:
             continue
-        #print(target[0])
-        #print(target[1])
         l_id = int(code) + 1e6
         L1,L2 = [l_id],[l_id]
 
@@ -159,22 +155,7 @@ def solve(cur_date):
         #print("current max value : %.4f"%(float(maxvalue[np.argmax(maxvalue)])))
         print("%s : compute time %.4f , all time %.4f"%(code,float(time.time() - time_compute),float(time.time() - time_start)))
         #break
-    """
-    for i in range(len(sMat_info)):
-        code = sMat_info[i]['code']
-        dic = {}
-        dic['_id'] = sMat_info[i]['date']+','+str(width)
-        dic['rdate'] = sMat_info[i]['date']
-        dic['update_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        dic['similar'] = []
-        for j in range(1):
-            dic['similar'].append({
-                'code': str(int(result[i][j][1]))[1:],
-                'rdate': time.strftime('%Y-%m-%d', time.localtime(result[i][j][2])),
-                'similarity' : float(result[i][j][0])
-                })
-        print(dic)
-    """
+    
     simi_res = []
     for i in range(len(sMat_info)):
         code = sMat_info[i]['code']
@@ -189,7 +170,7 @@ def solve(cur_date):
                 'rdate': time.strftime('%Y-%m-%d', time.localtime(result[i][j][2])),
                 'similarity' : float(result[i][j][0])
                 })
-        if dic['rdate'] == time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()-86400)):
+        if dic['rdate'] == last_date:
             simi_res.append({
                 'code_a' : code,
                 'rdate_a' : dic['rdate'],
@@ -201,8 +182,8 @@ def solve(cur_date):
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
     simi_res = simi_res[0:200]
     simi_top = {
-        '_id' : time.strftime("%Y-%m-%d", time.localtime(time.time()-86400))+','+str(width),
-        'date' : time.strftime("%Y-%m-%d", time.localtime(time.time()-86400)),
+        '_id' : last_date+','+str(width),
+        'date' : last_date,
         'top' : simi_res
     }
     mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
