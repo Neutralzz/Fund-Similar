@@ -8,9 +8,12 @@ global mongo_cli
 mongo_cli = pymongo.MongoClient('mongodb://%s:%s@127.0.0.1:27613' % (config.dbuser,config.dbpwd))
 
 codes = mongo_cli['fund-similar'].collection_names(include_system_collections=False)
+"""
+for code in codes:
+    mongo_cli['fund-data'][code].create_index([('date',pymongo.DESCENDING)],unique=True)
 
-
-for day in ['19','20','21','22','23','26']:
+"""
+for day in ['30']:
     date = '2018-03-'+day
     simi_res = []
     for code in codes:
@@ -26,7 +29,7 @@ for day in ['19','20','21','22','23','26']:
             'similarity' : res['similar'][0]['similarity']
         })
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
-    simi_res = simi_res[0:200]
+    simi_res = simi_res[0:500]
     simi_top = {
         '_id' : date+',20',
         'date' : date,
@@ -34,7 +37,6 @@ for day in ['19','20','21','22','23','26']:
     }
     mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
         
-
 
 
         

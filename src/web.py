@@ -57,10 +57,13 @@ class InfoHandler(tornado.web.RequestHandler):
         global mongo_cli
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
         callback = self.get_argument('callback','')
-        date = self.get_argument('date',time.strftime("%Y-%m-%d", time.localtime(time.time()-86400)))
+        date = self.get_argument('date','-')
         width = int(self.get_argument('len','20'))
         if input == 'top':
-            result = list(mongo_cli['fund-info']['similar-top'].find({'_id':date+','+str(width)}))
+            if date != '-':
+                result = list(mongo_cli['fund-info']['similar-top'].find({'_id':date+','+str(width)}))
+            else:
+                result = list(mongo_cli['fund-info']['similar-top'].find().sort('_id',pymongo.DESCENDING).limit(1))
             self.write(callback+'('+json.dumps(result)+')')
         if input == 'codename':
             result = {}

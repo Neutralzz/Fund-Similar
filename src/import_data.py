@@ -6,7 +6,7 @@ from urllib import request
 import config
 
 global mongo_cli
-mongo_cli = pymongo.MongoClient('mongodb://%s:%s@127.0.0.1:27613' % (config.dbuser,config.dbadmin))
+mongo_cli = pymongo.MongoClient('mongodb://%s:%s@127.0.0.1:27613' % (config.dbuser,config.dbpwd))
 	
 
 def main():
