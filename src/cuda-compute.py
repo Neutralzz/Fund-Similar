@@ -6,6 +6,7 @@ import time
 import config
 import pymongo
 import argparse
+import json
 
 global mongo_cli, sMat, sMat_info, width, RESNUM
 mongo_cli = pymongo.MongoClient('mongodb://%s:%s@47.94.128.239:27613' % (config.dbuser,config.dbpwd))
@@ -109,6 +110,11 @@ def load_data(cur_date):
         #    break
     sMat = np.array(sMat,np.float32)
 
+def result2file(path,data):
+    file = open(path,'w')
+    file.write(json.dumps(data))
+    file.close()
+
 def solve(cur_date):
     global mongo_cli, sMat, sMat_info, width, RESNUM, last_date
 
@@ -178,15 +184,29 @@ def solve(cur_date):
                 'rdate_b' : dic['similar'][0]['rdate'],
                 'similarity' : dic['similar'][0]['similarity']
             })
-        mongo_cli['fund-similar'][code].update({'_id':dic['_id']},{'$set':dic},upsert=True)
+        try:
+            mongo_cli['fund-similar'][code].update({'_id':dic['_id']},{'$set':dic},upsert=True)
+        except Exception as e:
+            print('can\' connect to mongodb')
+            result2file('../result/'+code,dic)
+
     simi_res = sorted(simi_res,key= lambda x : x['similarity'],reverse=True)
-    simi_res = simi_res[0:200]
+    sr_pos = 0
+    for i in range(len(simi_res)):
+        if simi_res[i]['similarity'] < 0.95:
+            sr_pos = i
+            break
+    simi_res = simi_res[sr_pos:sr_pos+200]
+
     simi_top = {
         '_id' : last_date+','+str(width),
         'date' : last_date,
         'top' : simi_res
     }
-    mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
+    try:
+        mongo_cli['fund-info']['similar-top'].update({'_id':simi_top['_id']},{'$set':simi_top},upsert=True)
+    except Exception as e:
+        result2file('../result/similar-top',simi_top)
     print("total compute time %.4f , total used time %.4f."%(time_prog_compute,float(time.time()-time_prog_start)))
 
 def main():
