@@ -14,12 +14,17 @@ def home(req):
     return render(req,"home.html",{"zscode":"sh000001,sz399001,sh000300,sz399006,sz399005,sh000016".split(',')})
 
 def top(req):
-    return render(req,"toplist.html",{})
+    date = req.GET.get('date',None)
+    return render(req,"toplist.html",{'date':date})
 
 def search(req):
     code = req.GET.get('fundcode','000001')
     date = req.GET.get('date', None)    
     width = req.GET.get('len',None)
+    if '-' not in date:
+        date = None
+    if 'code' == '':
+        code = '000001'
     return render(req,"search.html",{'code':code,'date':date,'len':width,'timetick':int(time.time())})
 
 

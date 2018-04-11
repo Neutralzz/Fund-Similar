@@ -4,9 +4,18 @@
 {% block title %}相似排名 - 基金相似在线查询{% endblock %}
 
 {% block content %}
-
 <div class="row">
+    <div class="col-md-6">
     <h3><span id="date"></span>&nbsp;基金相似排名</h3>
+    </div>
+    <div class="col-md-6"  style="margin-top: 15px;">
+    <form class="navbar-form navbar-right" role="search">
+            <div class="form-group">
+                <input id="rqdate" type="text" class="form-control" name="date" placeholder="日期">
+            </div>
+            <button type="button" class="btn btn-default" onclick="rk_search()">查询</button>
+    </form>
+</div>
 </div>
 <div class="row">
     <table class="table">
@@ -32,6 +41,20 @@
     var code2name = null
     var querydate = null
     $(document).ready(function(){
+        $("#rqdate").datepicker({
+            format: "yyyy-mm-dd",
+            autoclose: true,
+            todayBtn: false,
+            todayHighlight: false,
+            showMeridian: true,
+            pickerPosition: "bottom-left",
+            language: 'zh-CN',//中文，需要引用zh-CN.js包
+            startView: 0,//月视图
+            minView: 2,//日期时间选择器所能够提供的最精确的时间选择视图
+            startDate: '2018-03-29',
+            daysOfWeekDisabled: [0,6],
+            endDate:endDate
+        });
         $.ajax({
             url: "http://47.94.128.239:8088/info/codename",
             type: "GET",
@@ -42,11 +65,24 @@
                 get_data()
             }
         });
+
     })
 
-    function get_data(){
+    function rk_search(){
+        var qdate = $("#rqdate").val()
+        console.info(qdate)
+        get_data(qdate)
+    }
+
+    function get_data(date){
+        date = typeof date !== 'undefined' ?  date : -1
+        var url = null
+        if(date==-1)
+            url = "http://47.94.128.239:8088/info/top"
+        else
+            url = "http://47.94.128.239:8088/info/top?date="+date
         $.ajax({
-            url: "http://47.94.128.239:8088/info/top",
+            url: url,
             type: "GET",
             dataType: "jsonp",  //指定服务器返回的数据类型
             jsonpCallback: "data_init",  //指定回调函数名称
@@ -63,6 +99,8 @@
         rows = data["top"]
         html = ""
         for(var i = 0;i < rows.length;i++){
+            if(rows[i]["similarity"] > 0.95)
+                continue
             single = "<tr>"
             single += "<td>"+code2name[rows[i]["code_a"]]+"("+rows[i]["code_a"]+")</td>"
             single += "<td>"+code2name[rows[i]["code_b"]]+"("+rows[i]["code_b"]+")</td>"

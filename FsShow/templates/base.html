@@ -7,6 +7,11 @@
         <script src="http://cdn.bootcss.com/jquery/1.11.2/jquery.min.js"></script>
         <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.2/css/bootstrap.min.css">
         <script src="http://cdn.bootcss.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+        
+        <link href="https://cdn.bootcss.com/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+        <script src="https://cdn.bootcss.com/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+        <script src="https://cdn.bootcss.com/bootstrap-datepicker/1.8.0/locales/bootstrap-datepicker.zh-CN.min.js"></script>
+        
         <script src="https://cdn.bootcss.com/echarts/4.0.4/echarts.js"></script>
         <title>{% block title %}{% endblock %}</title>
 </head>
@@ -30,22 +35,44 @@
         <form class="navbar-form navbar-right" role="search" action="/search/" method="get">
             <div class="form-group">
                 <input type="text" class="form-control" name="fundcode" placeholder="基金代码">
+                <input id="fqdate" type="text" class="form-control" name="date" placeholder="日期">
             </div>
             <button type="submit" class="btn btn-default" onclick="search()">相似查询</button>
         </form>
         </div>
     </nav>
     <div class="container" style="width: 90%">
-        <header>
+        <!--<header>
             <p class=text-center>
             <iframe src="http://www.kjj.com/zhishu-4-bbs.html" allowtransparency="true" width="950" height="24" scrolling="no" frameborder="0"></iframe></p>
-        </header>
+        </header>-->
         {% block content %}{% endblock %}
     </div>
+
     <!--<footer>
         <center>Neutralzz</center>
         <center>{% block footer %}SDU{% endblock %}</center> 
     </footer> -->
     {% block script %}{% endblock %}
+    <script type="text/javascript">
+        var endDate = new Date()
+        endDate.setTime(endDate.getTime()-86400000)
+        $(document).ready(function(){
+        $("#fqdate").datepicker({
+            format: "yyyy-mm-dd",
+            autoclose: true,
+            todayBtn: false,
+            todayHighlight: false,
+            showMeridian: true,
+            pickerPosition: "bottom-left",
+            language: 'zh-CN',//中文，需要引用zh-CN.js包
+            startView: 0,//月视图
+            minView: 2,//日期时间选择器所能够提供的最精确的时间选择视图
+            startDate: '2018-03-29',
+            daysOfWeekDisabled: [0,6],
+            endDate:endDate
+        });
+        })
+    </script>
 </body>
 </html>
